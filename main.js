@@ -250,7 +250,7 @@ function dotimer() {
 }
 
 function createShareButton(won, date, player = 0) {
-    const yymmdd = `${date.getYear() + 1900}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const yymmdd = `${date.getUTCYear() + 1900}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
     const button = document.createElement("button");
     button.innerText = "share";
     button.id = "button";
