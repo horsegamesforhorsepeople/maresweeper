@@ -249,8 +249,8 @@ function dotimer() {
     document.getElementById("timer").innerText++;
 }
 
-function createShareButton(won, date, player = 0) {
-    const yymmdd = `${date.getUTCYear() + 1900}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
+function createShareButton(won, date, player = 0, board = 0) {
+    const yymmdd = `${date.getYear() + 1900}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
     const button = document.createElement("button");
     button.innerText = "share";
     button.id = "button";
@@ -262,12 +262,14 @@ function createShareButton(won, date, player = 0) {
             text = `i beat the daily maresweeper (${yymmdd}) in ${time} seconds`;
         } else {
             let correct = 0;
+            let total = 0;
             for (let y = 0; y < player.length; y++) {
                 for (let x = 0; x < player[0].length; x++) {
                     correct += !(player[y][x] == '?' || player[y][x] == 'F')
+                    total += board[y][x] != 'X';
                 }
             }
-            const percentage = Math.round(correct / (player.length * player[0].length) * 100);
+            const percentage = Math.round(correct / total * 100);
             text = `i beat ${percentage}% of the daily maresweeper (${yymmdd}) in ${time} seconds`;
         }
         navigator.clipboard.writeText(text);
@@ -306,7 +308,7 @@ function main() {
             if (playerBoard == "ripbozo") {
                 clearInterval(timer);
                 alert("you lost");
-                createShareButton(false, date, copy);
+                createShareButton(false, date, copy, minesweeperBoard);
                 playerBoard = minesweeperBoard;
                 document.getElementById("board").style.pointerEvents = "none";
             }
