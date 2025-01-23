@@ -127,7 +127,14 @@ function createPlayerBoard(xSize, ySize) {
     return board;
 }
 
-function updatePlayerBoard(player, board, clickPos, leftClick) {
+function isOoB(pos, board) {
+    return pos.x < 0 || pos.y < 0 || pos.x > board[0].length - 1 || pos.y > board.length - 1;
+}
+
+function updatePlayerBoard(player, board, clickPos, leftClick, chord = false) {
+    if (isOoB(clickPos, board))
+        return player;
+
     if (!leftClick) {
         if (player[clickPos.y][clickPos.x] == '?')
             player[clickPos.y][clickPos.x] = 'F';
@@ -135,6 +142,9 @@ function updatePlayerBoard(player, board, clickPos, leftClick) {
             player[clickPos.y][clickPos.x] = '?';
         return player;
     }
+
+    if (chord && board[clickPos.y][clickPos.x] != 'X' && player[clickPos.y][clickPos.x] == 'F')
+        return "ripbozo";
 
     if (player[clickPos.y][clickPos.x] == 'F')
         return player;
@@ -153,9 +163,6 @@ function updatePlayerBoard(player, board, clickPos, leftClick) {
         new Coordinate(-1, -1),
     ];
 
-    function isOoB(pos) {
-        return pos.x < 0 || pos.y < 0 || pos.x > board[0].length - 1 || pos.y > board.length - 1;
-    }
 
     if (board[clickPos.y][clickPos.x] != 0)
         player[clickPos.y][clickPos.x] = board[clickPos.y][clickPos.x];
@@ -172,7 +179,7 @@ function updatePlayerBoard(player, board, clickPos, leftClick) {
             for (let i = 0; i < dirs.length; i++) {
                 const dir = dirs[i];
                 const newPos = Coordinate.add(pos, dir);
-                if (!includes(visited, newPos) && !includes(queue, newPos) && !isOoB(newPos) && player[newPos.y][newPos.x] != 'F') {
+                if (!includes(visited, newPos) && !includes(queue, newPos) && !isOoB(newPos, board) && player[newPos.y][newPos.x] != 'F') {
                     queue.push(newPos);
                 }
             }
@@ -289,12 +296,27 @@ function main() {
     let playerBoard = createPlayerBoard(xSize, ySize);
     initGraphics(xSize, ySize);
     let timer;
+    let chordCount = 0;
+    const dirs = [
+        new Coordinate(1, 0),
+        new Coordinate(-1, 0),
+        new Coordinate(0, 1),
+        new Coordinate(0, -1),
+        new Coordinate(1, 1),
+        new Coordinate(1, -1),
+        new Coordinate(-1, 1),
+        new Coordinate(-1, -1),
+    ];
+    let temp = [];
+    let chordDone = true;
     document.querySelectorAll(".tile").forEach((tile) => {
         tile.addEventListener("click", () => {
             if (document.getElementById("timer").dataset.ison == "no") {
                 document.getElementById("timer").dataset.ison = "yes";
                 timer = setInterval(dotimer, 1000);
             }
+            if (!chordDone)
+                return;
             const c = tile.id.split(" ");
             const pos = new Coordinate(parseInt(c[0]), parseInt(c[1]));
             let copy = [...playerBoard];
@@ -318,11 +340,81 @@ function main() {
 
         tile.addEventListener("contextmenu", (event) => {
             event.preventDefault();
+            if (chordCount == 2)
+                return;
             const c = tile.id.split(" ");
             const pos = new Coordinate(parseInt(c[0]), parseInt(c[1]));
             playerBoard = updatePlayerBoard(playerBoard, minesweeperBoard, pos, false);
             updateGraphics(playerBoard);
             //printBoard(playerBoard);
+        });
+        
+        tile.addEventListener("mouseup", () => {
+            if (chordCount == 2) {
+                for (let i = 0; i < temp.length; i++) {
+                    temp[i].className = "tile";
+                }
+                temp = [];
+            }
+            chordCount--;
+            if (chordCount == 0)
+                chordDone = true;
+        });
+
+        tile.addEventListener("mousedown", (event) => {
+            chordCount++;
+            if (chordCount == 2) {
+                chordDone = false;
+                const tile = event.target;
+                const number = tile.innerText;
+                if (number == "" || number == 'F')
+                    return;
+
+                let [x, y] = event.target.id.split(" ");
+                x = parseInt(x);
+                y = parseInt(y);
+                const coord = new Coordinate(x, y);
+                let bombCount = 0;
+                for (let i = 0; i < dirs.length; i++) {
+                    const dir = dirs[i];
+                    const newPos = Coordinate.add(coord, dir);
+                    if (isOoB(newPos, minesweeperBoard))
+                        continue;
+                    bombCount += playerBoard[newPos.y][newPos.x] == 'F';
+                }
+                if (bombCount != number) {
+                    for (let i = 0; i < dirs.length; i++) {
+                        const dir = dirs[i];
+                        const newPos = Coordinate.add(coord, dir);
+                        if (isOoB(newPos, minesweeperBoard))
+                            continue;
+                        if (playerBoard[newPos.y][newPos.x] != '?')
+                            continue;
+                        const tile = document.getElementById(`${newPos.x} ${newPos.y}`);
+                        temp.push(tile);
+                        tile.classList.add("flipped");
+                    }
+                    return;
+                }
+                for (let i = 0; i < dirs.length; i++) {
+                    const dir = dirs[i];
+                    const newPos = Coordinate.add(coord, dir);
+                    if (isOoB(newPos, minesweeperBoard))
+                        continue;
+                    let copy = [...playerBoard];
+                    playerBoard = updatePlayerBoard(playerBoard, minesweeperBoard, newPos, true, true);
+                    if (playerBoard == "ripbozo") {
+                        clearInterval(timer);
+                        alert("you lost");
+                        createShareButton(false, date, copy, minesweeperBoard);
+                        playerBoard = minesweeperBoard;
+                        document.getElementById("board").style.pointerEvents = "none";
+                        updateGraphics(playerBoard);
+                        break;
+                    }
+                    updateGraphics(playerBoard);
+                }
+            }
         });
     });
 
