@@ -207,6 +207,19 @@ function initGraphics(xSize, ySize) {
     timer.innerText = "0";
     board.append(timer);
     document.body.append(board);
+    if (document.getElementById("seeddiv") == null) {
+        const seedInput = document.createElement("input");
+        seedInput.id = "seedinput";
+        seedInput.placeholder = "seed";
+        const seedButton = document.createElement("button");
+        seedButton.id = "seedbutton";
+        seedButton.innerText = "go";
+        const seedDiv = document.createElement("div");
+        seedDiv.id = "seeddiv";
+        seedDiv.append(seedInput);
+        seedDiv.append(seedButton);
+        document.body.append(seedDiv);
+    }
 }
 
 function updateGraphics(player) {
@@ -256,7 +269,7 @@ function dotimer() {
     document.getElementById("timer").innerText++;
 }
 
-function createShareButton(won, date, player = 0, board = 0) {
+function createShareButton(won, date, player, board, daily, seed) {
     const yymmdd = `${date.getYear() + 1900}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
     const button = document.createElement("button");
     button.innerText = "share";
@@ -266,7 +279,10 @@ function createShareButton(won, date, player = 0, board = 0) {
         const time = document.getElementById("timer").innerText;
         let text;
         if (won) {
-            text = `i beat the daily maresweeper (${yymmdd}) in ${time} seconds`;
+            if (daily)
+                text = `i beat the daily maresweeper (${yymmdd}) in ${time} seconds`;
+            else
+                text = `i beat maresweeper in ${time} seconds on the seed: ${seed}`;
         } else {
             let correct = 0;
             let total = 0;
@@ -277,7 +293,10 @@ function createShareButton(won, date, player = 0, board = 0) {
                 }
             }
             const percentage = Math.round(correct / total * 100);
-            text = `i beat ${percentage}% of the daily maresweeper (${yymmdd}) in ${time} seconds`;
+            if (daily)
+                text = `i beat ${percentage}% of the daily maresweeper (${yymmdd}) in ${time} seconds`;
+            else
+                text = `i beat ${percentage}% of maresweeper in ${time} seconds on the seed: ${seed}`;
         }
         navigator.clipboard.writeText(text);
     });
@@ -289,13 +308,13 @@ function createShareButton(won, date, player = 0, board = 0) {
 function main() {
     const date = new Date();
     date.setUTCHours(0, 0, 0, 0);
-    setSeed(date.getTime());
     const xSize = 31;
     const ySize = 15;
-    const minesweeperBoard = createMinesweeperBoard(xSize, ySize);
-    let playerBoard = createPlayerBoard(xSize, ySize);
     initGraphics(xSize, ySize);
-    let timer;
+    setSeed(date.getTime());
+    let minesweeperBoard = createMinesweeperBoard(xSize, ySize);
+    let playerBoard = createPlayerBoard(xSize, ySize);
+    let timer, seed;
     let chordCount = 0;
     const dirs = [
         new Coordinate(1, 0),
@@ -309,12 +328,30 @@ function main() {
     ];
     let temp = [];
     let chordDone = true;
+    let daily = true;
+    document.getElementById("seedbutton").addEventListener("click", () => {
+        seed = document.getElementById("seedinput").value;
+        setSeed(seed);
+        minesweeperBoard = createMinesweeperBoard(xSize, ySize);
+        playerBoard = createPlayerBoard(xSize, ySize);
+        updateGraphics(playerBoard);
+        document.getElementById("board").style.pointerEvents = "auto";
+        document.getElementById("timer").dataset.ison = "no";
+        document.getElementById("timer").innerText = "0";
+        daily = false;
+        chordDone = true;
+        chordCount = 0;
+        temp = [];
+        console.log(seed);
+    });
+
     document.querySelectorAll(".tile").forEach((tile) => {
         tile.addEventListener("click", () => {
             if (document.getElementById("timer").dataset.ison == "no") {
                 document.getElementById("timer").dataset.ison = "yes";
                 timer = setInterval(dotimer, 1000);
             }
+            document.getElementById("seeddiv").style.display = "none";
             if (!chordDone)
                 return;
             const c = tile.id.split(" ");
@@ -325,14 +362,15 @@ function main() {
                 clearInterval(timer);
                 alert("yippee");
                 document.getElementById("board").style.pointerEvents = "none";
-                createShareButton(true, date);
+                createShareButton(true, date, 0, 0, daily, seed);
             }
             if (playerBoard == "ripbozo") {
                 clearInterval(timer);
                 alert("you lost");
-                createShareButton(false, date, copy, minesweeperBoard);
+                createShareButton(false, date, copy, minesweeperBoard, daily, seed);
                 playerBoard = minesweeperBoard;
                 document.getElementById("board").style.pointerEvents = "none";
+                document.getElementById("seeddiv").style.display = "block";
             }
             updateGraphics(playerBoard);
             //printBoard(playerBoard);
@@ -382,7 +420,7 @@ function main() {
                         continue;
                     bombCount += playerBoard[newPos.y][newPos.x] == 'F';
                 }
-                if (bombCount != number) {
+                if (bombCount < number) {
                     for (let i = 0; i < dirs.length; i++) {
                         const dir = dirs[i];
                         const newPos = Coordinate.add(coord, dir);
@@ -406,10 +444,11 @@ function main() {
                     if (playerBoard == "ripbozo") {
                         clearInterval(timer);
                         alert("you lost");
-                        createShareButton(false, date, copy, minesweeperBoard);
+                        createShareButton(false, date, copy, minesweeperBoard, daily, seed);
                         playerBoard = minesweeperBoard;
                         document.getElementById("board").style.pointerEvents = "none";
                         updateGraphics(playerBoard);
+                        document.getElementById("seeddiv").style.display = "block";
                         break;
                     }
                     updateGraphics(playerBoard);

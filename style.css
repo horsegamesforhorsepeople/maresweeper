@@ -49,3 +49,9 @@ body {
     top: -1.5em;
     right: 0;
 }
+
+#seeddiv {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
