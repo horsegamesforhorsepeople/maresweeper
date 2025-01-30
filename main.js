@@ -91,7 +91,7 @@ function createMinesweeperBoard(xSize, ySize) {
             const pos = new Coordinate(x, y);
             if (bordersOccupied(pos))
                 continue;
-            if (Math.floor(Math.random() * 4) == 0) {
+            if (Math.random() * 4.3 < 1) {
                 mines.push(pos);
                 board[y][x] = 'X';
             }
