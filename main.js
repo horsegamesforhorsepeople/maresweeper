@@ -66,7 +66,7 @@ function createMinesweeperBoard(xSize, ySize) {
             const origin = zeroes[Math.floor(Math.random() * zeroes.length)];
             const dir = dirs[Math.floor(Math.random() * 4)];
             newPos = Coordinate.add(origin, dir);
-            valid = !includes(zeroes, newPos);
+            valid = !includes(zeroes, newPos) && !isOoB(newPos, board);
         }
         zeroes.push(newPos);
     }
