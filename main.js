@@ -1,3 +1,4 @@
+// this code was okay at one point now it's balls but it's okay to write balls code it's js anyway
 function setSeed(seed) {
     !function(f,a,c){var s,l=256,p="random",d=c.pow(l,6),g=c.pow(2,52),y=2*g,h=l-1;function n(n,t,r){function e(){for(var n=u.g(6),t=d,r=0;n<g;)n=(n+r)*l,t*=l,r=u.g(1);for(;y<=n;)n/=2,t/=2,r>>>=1;return(n+r)/t}var o=[],i=j(function n(t,r){var e,o=[],i=typeof t;if(r&&"object"==i)for(e in t)try{o.push(n(t[e],r-1))}catch(n){}return o.length?o:"string"==i?t:t+"\0"}((t=1==t?{entropy:!0}:t||{}).entropy?[n,S(a)]:null==n?function(){try{var n;return s&&(n=s.randomBytes)?n=n(l):(n=new Uint8Array(l),(f.crypto||f.msCrypto).getRandomValues(n)),S(n)}catch(n){var t=f.navigator,r=t&&t.plugins;return[+new Date,f,r,f.screen,S(a)]}}():n,3),o),u=new m(o);return e.int32=function(){return 0|u.g(4)},e.quick=function(){return u.g(4)/4294967296},e.double=e,j(S(u.S),a),(t.pass||r||function(n,t,r,e){return e&&(e.S&&v(e,u),n.state=function(){return v(u,{})}),r?(c[p]=n,t):n})(e,i,"global"in t?t.global:this==c,t.state)}function m(n){var t,r=n.length,u=this,e=0,o=u.i=u.j=0,i=u.S=[];for(r||(n=[r++]);e<l;)i[e]=e++;for(e=0;e<l;e++)i[e]=i[o=h&o+n[e%r]+(t=i[e])],i[o]=t;(u.g=function(n){for(var t,r=0,e=u.i,o=u.j,i=u.S;n--;)t=i[e=h&e+1],r=r*l+i[h&(i[e]=i[o=h&o+t])+(i[o]=t)];return u.i=e,u.j=o,r})(l)}function v(n,t){return t.i=n.i,t.j=n.j,t.S=n.S.slice(),t}function j(n,t){for(var r,e=n+"",o=0;o<e.length;)t[h&o]=h&(r^=19*t[h&o])+e.charCodeAt(o++);return S(t)}function S(n){return String.fromCharCode.apply(0,n)}if(j(c.random(),a),"object"==typeof module&&module.exports){module.exports=n;try{s=require("crypto")}catch(n){}}else"function"==typeof define&&define.amd?define(function(){return n}):c["seed"+p]=n}("undefined"!=typeof self?self:this,[],Math);
     Math.seedrandom(seed);
@@ -91,7 +92,7 @@ function createMinesweeperBoard(xSize, ySize) {
             const pos = new Coordinate(x, y);
             if (bordersOccupied(pos))
                 continue;
-            if (Math.random() * 4.3 < 1) {
+            if (Math.random() * 5 < 1) {
                 mines.push(pos);
                 board[y][x] = 'X';
             }
@@ -216,7 +217,26 @@ function initGraphics(xSize, ySize) {
         seedButton.innerText = "go";
         const seedDiv = document.createElement("div");
         seedDiv.id = "seeddiv";
+        const x = document.createElement("input");
+        x.type = "number";
+        x.id = "xinput";
+        x.value = 15;
+        x.style.width = "4em";
+        x.placeholder = "width";
+        const p = document.createElement("p");
+        p.innerText = "x";
+        p.style.color = "white";
+        p.style.display = "inline-block";
+        const y = document.createElement("input");
+        y.type = "number";
+        y.id = "yinput";
+        y.value = 15;
+        y.style.width = "4em";
+        y.placeholder = "height";
         seedDiv.append(seedInput);
+        seedDiv.append(x);
+        seedDiv.append(p);
+        seedDiv.append(y);
         seedDiv.append(seedButton);
         document.body.append(seedDiv);
     }
@@ -282,7 +302,7 @@ function createShareButton(won, date, player, board, daily, seed) {
             if (daily)
                 text = `i beat the daily maresweeper (${yymmdd}) in ${time} seconds`;
             else
-                text = `i beat maresweeper in ${time} seconds on the seed: ${seed}`;
+                text = `i beat maresweeper (${board[0].length}x${board.length}) in ${time} seconds on the seed: ${seed}`;
         } else {
             let correct = 0;
             let total = 0;
@@ -296,7 +316,7 @@ function createShareButton(won, date, player, board, daily, seed) {
             if (daily)
                 text = `i beat ${percentage}% of the daily maresweeper (${yymmdd}) in ${time} seconds`;
             else
-                text = `i beat ${percentage}% of maresweeper in ${time} seconds on the seed: ${seed}`;
+                text = `i beat ${percentage}% of maresweeper (${board[0].length}x${board.length}) in ${time} seconds on the seed: ${seed}`;
         }
         navigator.clipboard.writeText(text);
     });
@@ -305,16 +325,8 @@ function createShareButton(won, date, player, board, daily, seed) {
     document.getElementById("board").append(button);
 }
 
-function main() {
-    const date = new Date();
-    date.setUTCHours(0, 0, 0, 0);
-    const xSize = 31;
-    const ySize = 15;
-    initGraphics(xSize, ySize);
-    setSeed(date.getTime());
-    let minesweeperBoard = createMinesweeperBoard(xSize, ySize);
-    let playerBoard = createPlayerBoard(xSize, ySize);
-    let timer, seed;
+function everything(daily, date, seed, playerBoard, minesweeperBoard) {
+    let timer;
     let chordCount = 0;
     const dirs = [
         new Coordinate(1, 0),
@@ -328,32 +340,15 @@ function main() {
     ];
     let temp = [];
     let chordDone = true;
-    let daily = true;
-    document.getElementById("seedbutton").addEventListener("click", () => {
-        seed = document.getElementById("seedinput").value;
-        setSeed(seed);
-        minesweeperBoard = createMinesweeperBoard(xSize, ySize);
-        playerBoard = createPlayerBoard(xSize, ySize);
-        updateGraphics(playerBoard);
-        document.getElementById("board").style.pointerEvents = "auto";
-        document.getElementById("timer").dataset.ison = "no";
-        document.getElementById("timer").innerText = "0";
-        daily = false;
-        chordDone = true;
-        chordCount = 0;
-        temp = [];
-        console.log(seed);
-    });
-
     document.querySelectorAll(".tile").forEach((tile) => {
         tile.addEventListener("click", () => {
             if (document.getElementById("timer").dataset.ison == "no") {
                 document.getElementById("timer").dataset.ison = "yes";
                 timer = setInterval(dotimer, 1000);
             }
-            document.getElementById("seeddiv").style.display = "none";
             if (!chordDone)
                 return;
+            document.getElementById("seeddiv").style.display = "none";
             const c = tile.id.split(" ");
             const pos = new Coordinate(parseInt(c[0]), parseInt(c[1]));
             let copy = [...playerBoard];
@@ -362,7 +357,7 @@ function main() {
                 clearInterval(timer);
                 alert("yippee");
                 document.getElementById("board").style.pointerEvents = "none";
-                createShareButton(true, date, 0, 0, daily, seed);
+                createShareButton(true, date, playerBoard, minesweeperBoard, daily, seed);
             }
             if (playerBoard == "ripbozo") {
                 clearInterval(timer);
@@ -451,12 +446,53 @@ function main() {
                         document.getElementById("seeddiv").style.display = "block";
                         break;
                     }
+                    if (checkIfWon(playerBoard, minesweeperBoard)) {
+                        clearInterval(timer);
+                        alert("yippee");
+                        document.getElementById("board").style.pointerEvents = "none";
+                        createShareButton(true, date, 0, 0, daily, seed);
+                        updateGraphics(playerBoard);
+                        document.getElementById("seeddiv").style.display = "block";
+                        break;
+                    }
                     updateGraphics(playerBoard);
                 }
             }
         });
     });
+}
 
+function main() {
+    const date = new Date();
+    date.setUTCHours(0, 0, 0, 0);
+    let xSize = 31;
+    let ySize = 15;
+    document.querySelector(":root").style.setProperty("--x", xSize);
+    document.querySelector(":root").style.setProperty("--y", ySize);
+    initGraphics(xSize, ySize);
+    setSeed(date.getTime());
+    let minesweeperBoard = createMinesweeperBoard(xSize, ySize);
+    let playerBoard = createPlayerBoard(xSize, ySize);
+    document.getElementById("seedbutton").addEventListener("click", () => {
+        const seed = document.getElementById("seedinput").value;
+        setSeed(seed);
+        xSize = document.getElementById("xinput").value || 15;
+        ySize = document.getElementById("yinput").value || 15;
+        minesweeperBoard = createMinesweeperBoard(xSize, ySize);
+        playerBoard = createPlayerBoard(xSize, ySize);
+        document.getElementById("board").style.pointerEvents = "auto";
+        document.getElementById("timer").dataset.ison = "no";
+        document.getElementById("timer").innerText = "0";
+        document.getElementById("seeddiv").style.display = "none";
+        document.getElementById("board").remove();
+        initGraphics(xSize, ySize);
+        updateGraphics(playerBoard);
+        document.querySelector(":root").style.setProperty("--x", xSize);
+        document.querySelector(":root").style.setProperty("--y", ySize);
+        everything(false, date, seed, playerBoard, minesweeperBoard);
+    });
+
+    everything(true, date, 0, playerBoard, minesweeperBoard);
     //printBoard(minesweeperBoard);
     //printBoard(playerBoard);
 }

@@ -11,11 +11,11 @@ body {
 }
 
 #board {
-    width: calc(2em * 31);
+    width: calc(2em * var(--x));
     background-color: white;
     display: grid;
-    grid-template-rows: repeat(15, 1fr);
-    grid-template-columns: repeat(31, 1fr);
+    grid-template-rows: repeat(var(--y), 1fr);
+    grid-template-columns: repeat(var(--x), 1fr);
     position: relative;
 }
 
