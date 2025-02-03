@@ -357,6 +357,7 @@ function everything(daily, date, seed, playerBoard, minesweeperBoard) {
                 clearInterval(timer);
                 alert("yippee");
                 document.getElementById("board").style.pointerEvents = "none";
+                document.getElementById("seeddiv").style.display = "block";
                 createShareButton(true, date, playerBoard, minesweeperBoard, daily, seed);
             }
             if (playerBoard == "ripbozo") {
@@ -450,7 +451,7 @@ function everything(daily, date, seed, playerBoard, minesweeperBoard) {
                         clearInterval(timer);
                         alert("yippee");
                         document.getElementById("board").style.pointerEvents = "none";
-                        createShareButton(true, date, 0, 0, daily, seed);
+                        createShareButton(true, date, copy, minesweeperBoard, daily, seed);
                         updateGraphics(playerBoard);
                         document.getElementById("seeddiv").style.display = "block";
                         break;
